@@ -3,7 +3,7 @@
 **Maritime Foreseeability Intelligence — Production Architecture Overview**
 
 © 2025 FIG LTD · Proprietary and Confidential
-
+🔗 [View Live Architecture](https://fishintelglobal.github.io/fishintel-architecture)
 ## View
 
 Open `index.html` in any browser. No build step. No dependencies.
