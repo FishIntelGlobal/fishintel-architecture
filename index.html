@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FishIntel · ENIGMA CORE v7.0 · System Architecture</title>
+<meta name="description" content="Maritime Foreseeability Intelligence - Production Architecture">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔒</text></svg>">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#060b18;font-family:'JetBrains Mono','Fira Code','SF Mono','Courier New',monospace;color:#e8edf5;overflow-x:hidden;font-size:16px}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:#060b18}
+::-webkit-scrollbar-thumb{background:#1a2744;border-radius:3px}
+::selection{background:#00d4ff33;color:#fff}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect}=React;
+
+const C={bg:"#060b18",card:"#0c1322",hover:"#111c2e",border:"#1a2744",accent:"#00d4ff",glow:"#00d4ff15",warn:"#ff6b35",ok:"#10b981",gold:"#f59e0b",purple:"#8b5cf6",text:"#e8edf5",mid:"#8899b3",dim:"#4a5c78",locked:"#ff3366",eth:"#627eea",poly:"#8247e5"};
+
+const Arrow=({color=C.accent,label})=>(
+<div style={{display:"flex",flexDirection:"column",alignItems:"center",padding:"3px 0"}}>
+<div style={{width:1,height:12,background:`${color}50`}}/>
+{label&&<div style={{fontSize:7,color:`${color}99`,letterSpacing:1.5,fontWeight:700,padding:"2px 8px",background:`${color}08`,borderRadius:3,border:`1px solid ${color}12`,margin:"2px 0"}}>{label}</div>}
+<div style={{width:0,height:0,borderLeft:"3px solid transparent",borderRight:"3px solid transparent",borderTop:`5px solid ${color}66`}}/>
+</div>);
+
+const Chip=({label,sub,color=C.accent,active,onClick})=>(
+<div onClick={onClick} style={{background:active?`${color}10`:C.card,border:`1px solid ${active?`${color}50`:C.border}`,borderRadius:5,padding:"6px 10px",cursor:onClick?"pointer":"default",transition:"all 0.2s",textAlign:"center",position:"relative",minWidth:75}}>
+{active&&<div style={{position:"absolute",top:0,left:0,right:0,height:2,background:color,borderRadius:"5px 5px 0 0"}}/>}
+<div style={{fontSize:9,fontWeight:700,color:active?color:C.text}}>{label}</div>
+<div style={{fontSize:7,color:C.dim,marginTop:2,letterSpacing:0.5}}>{sub}</div>
+</div>);
+
+const LH=({n,title,sub,color})=>(
+<div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+<div style={{width:26,height:26,borderRadius:"50%",background:`${color}15`,border:`1.5px solid ${color}40`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color}}>{n}</div>
+<div><div style={{fontSize:10,fontWeight:700,letterSpacing:1.5,color}}>{title}</div>
+<div style={{fontSize:8,color:C.dim,letterSpacing:0.5}}>{sub}</div></div>
+</div>);
+
+const feeds=["ATM-01","ATM-02","ATM-03","ATM-04","ATM-05","ATM-06","ATM-07","ATM-08","OCN-01","OCN-02","OCN-03","OCN-04","OCN-05","OCN-06","TDL-01","TDL-02","TDL-03","TDL-04","BIO-01","BIO-02","BIO-03","INF-01","INF-02","INF-03","INF-04","HMN-01","HMN-02","HMN-03","GEO-01","GEO-02","GEO-03","ADV-01","ADV-02","ADV-03","ADV-04","ADV-05","CRS-01","CRS-02","CRS-03","NVL-01","NVL-02","NVL-03","NVL-04","NVL-05","NVL-06","PRX-01","PRX-02","PRX-03"];
+
+function App(){
+const[d,setD]=useState(null);
+const[tab,setTab]=useState("arch");
+const[pulse,setPulse]=useState(0);
+
+useEffect(()=>{const t=setInterval(()=>setPulse(p=>(p+1)%feeds.length),120);return()=>clearInterval(t)},[]);
+
+const info={
+kafka:{t:"Apache Kafka",c:C.gold,x:"52 data pipelines — conventional and unconventional — generating concurrent streams from multiple industries. Kafka provides exactly-once delivery, handles backpressure during extreme weather events, and decouples every producer from every consumer. When any source updates, all downstream systems receive it simultaneously."},
+era5:{t:"ERA5 / CDS API",c:C.gold,x:"ECMWF gold standard atmospheric reanalysis. 0.25° hourly global coverage, 1940–present. This is the FOUNDATION — the publicly available baseline. What we layer on top of it from 47 additional proprietary sources across multiple industries is what creates the competitive advantage no one else has."},
+feast:{t:"Feature Store",c:C.gold,x:"52 pipelines from radically different domains — some that have never been cross-correlated for maritime risk — all feeding a centralised store. Prevents redundant computation, guarantees training/serving consistency, enables feature sharing across all 7 self-learning AI systems."},
+airflow:{t:"Apache Airflow",c:C.gold,x:"Orchestrates 52 heterogeneous pipelines as a DAG. Some sources update hourly. Some are event-triggered. Some are seasonal. Airflow manages the dependency chains, retry logic, and SLA monitoring that 52 diverse data sources demand."},
+mlflow:{t:"MLflow",c:C.purple,x:"7 self-learning AI systems × continuous model evolution × full experiment lineage. As systems adapt with new data, MLflow tracks every version transition, every improvement. Complete provenance from training data through to deployed artefact for every system in the chain."},
+timescale:{t:"TimescaleDB",c:C.purple,x:"Purpose-built for the massive temporal data that 52 pipelines generate. Hypertables auto-partition by time. As self-learning models ingest more data and improve, storage scales. Compression makes multi-decade, multi-source archival economically viable."},
+fastapi:{t:"FastAPI",c:C.accent,x:"Async-native API layer. Pre-computed predictions served instantly. Full pipeline re-computation runs asynchronously. Auto-generated OpenAPI docs mean third-party integrators — insurers, port authorities, fleet operators — consume the API without bespoke integration."},
+celery:{t:"Celery + Redis",c:C.accent,x:"7 consecutive AI systems = multi-second end-to-end pipeline. Celery chains tasks so each system's output triggers the next. Redis serves as broker, result backend, and hot cache. Horizontal scaling: add workers to any bottleneck system independently."},
+shap:{t:"SHAP / LIME",c:C.accent,x:"Transforms a composite score from 7 AI systems into legally defensible evidence. Full decomposition of which data sources, through which systems, drove the prediction. The glass box that makes a self-learning pipeline auditable in court."},
+eth:{t:"Ethereum (L1)",c:C.eth,x:"High-value permanent evidence. Final prediction batches, methodology hashes, critical reconstruction evidence anchored to mainnet. Maximum security. The legal-grade timestamp that cannot be challenged in any jurisdiction. 12 batches sealed to date."},
+poly:{t:"Polygon (L2)",c:C.poly,x:"Operational-scale timestamping. Individual reconstruction steps, intermediate outputs, live prediction logs. ~1000× lower cost than L1, same cryptographic guarantees. Anchored to Ethereum periodically for L1 security inheritance."},
+docker:{t:"Docker / K8s",c:C.ok,x:"7 AI systems = 7 independent microservices. Each containerised, each independently scalable. If one system needs more compute during storm events, it scales without touching the others. Self-healing: crashed containers restart. Zero-downtime deployments."},
+grafana:{t:"Grafana",c:C.ok,x:"Full observability: 7 AI systems, 52 data pipelines, dual blockchain confirmation, API health, model drift detection. Any degradation in any link — we know in seconds. Safety-critical monitoring for a safety-critical system."},
+};
+
+return(
+<div style={{background:C.bg,minHeight:"100vh",padding:"28px 16px"}}>
+<div style={{position:"fixed",top:0,left:0,right:0,bottom:0,backgroundImage:`linear-gradient(${C.border}10 1px,transparent 1px),linear-gradient(90deg,${C.border}10 1px,transparent 1px)`,backgroundSize:"60px 60px",pointerEvents:"none"}}/>
+<div style={{maxWidth:860,margin:"0 auto",position:"relative",zIndex:1,zoom:1.3}}>
+
+{/* HEADER */}
+<div style={{textAlign:"center",marginBottom:24}}>
+<div style={{display:"inline-flex",alignItems:"center",gap:8,padding:"4px 14px",border:`1px solid ${C.accent}30`,borderRadius:20,fontSize:8,letterSpacing:2.5,color:C.accent,background:C.glow}}>
+<span style={{width:5,height:5,borderRadius:"50%",background:C.accent,boxShadow:`0 0 6px ${C.accent}`}}/>
+FIG LTD · PRODUCTION ARCHITECTURE
+</div>
+<h1 style={{fontSize:23,fontWeight:800,margin:"10px 0 4px",letterSpacing:-0.5}}>Maritime Foreseeability Intelligence</h1>
+<p style={{color:C.dim,fontSize:10,letterSpacing:0.8,margin:0}}>52 data pipelines · 7 self-learning AI systems · dual-chain blockchain · 96.4% validated accuracy</p>
+</div>
+
+{/* TABS */}
+<div style={{display:"flex",justifyContent:"center",gap:4,marginBottom:22}}>
+{[{id:"arch",l:"ARCHITECTURE"},{id:"scale",l:"SCALING STRATEGY"},{id:"why",l:"WHY THIS STACK"}].map(t=>(
+<button key={t.id} onClick={()=>setTab(t.id)} style={{background:tab===t.id?`${C.accent}18`:"transparent",border:`1px solid ${tab===t.id?C.accent:C.border}`,borderRadius:4,padding:"7px 16px",color:tab===t.id?C.accent:C.dim,fontSize:9,fontWeight:700,letterSpacing:1.5,cursor:"pointer",fontFamily:"inherit"}}>{t.l}</button>
+))}
+</div>
+
+{/* ════════ ARCHITECTURE ════════ */}
+{tab==="arch"&&(<>
+
+<LH n="1" title="52 MULTI-SOURCE DATA PIPELINES" sub="Conventional + cross-industry unconventional sources" color={C.gold}/>
+<div style={{background:`${C.gold}04`,border:`1px solid ${C.gold}15`,borderRadius:10,padding:"14px",overflow:"hidden"}}>
+
+{/* PUBLIC */}
+<div style={{marginBottom:10}}>
+<div style={{fontSize:8,fontWeight:700,letterSpacing:1.5,color:C.ok,marginBottom:6,display:"flex",alignItems:"center",gap:6}}>
+<span style={{width:4,height:4,borderRadius:"50%",background:C.ok}}/>PUBLIC DATA SOURCES</div>
+<div style={{display:"flex",gap:4,flexWrap:"wrap",justifyContent:"center"}}>
+{[{code:"ERA5",label:"ECMWF Reanalysis"},{code:"AIS",label:"Vessel Tracking"},{code:"UKHO",label:"Tidal Harmonics"},{code:"MAIB",label:"Incident Database"},{code:"CDS",label:"Climate Data Store"}].map(s=>(
+<div key={s.code} style={{padding:"6px 10px",background:`${C.ok}08`,border:`1px solid ${C.ok}20`,borderRadius:4,textAlign:"center"}}>
+<div style={{fontSize:10,fontWeight:800,color:C.ok}}>{s.code}</div>
+<div style={{fontSize:7,color:C.dim,marginTop:1}}>{s.label}</div>
+</div>))}
+</div>
+</div>
+
+{/* DIVIDER */}
+<div style={{display:"flex",alignItems:"center",gap:8,margin:"12px 0"}}>
+<div style={{flex:1,height:1,background:`${C.locked}20`}}/>
+<div style={{fontSize:8,fontWeight:800,letterSpacing:2,color:C.locked}}>🔒 PROPRIETARY DATA FEEDS · CLASSIFIED</div>
+<div style={{flex:1,height:1,background:`${C.locked}20`}}/>
+</div>
+
+{/* CLASSIFIED WALL */}
+<div style={{display:"flex",flexWrap:"wrap",gap:3,justifyContent:"center"}}>
+{feeds.map((code,i)=>{
+const isActive=Math.abs(pulse-i)<3||Math.abs(pulse-i-feeds.length)<3;
+return(
+<div key={code} style={{padding:"4px 8px",borderRadius:3,textAlign:"center",minWidth:52,background:isActive?`${C.locked}12`:`${C.locked}04`,border:`1px solid ${isActive?`${C.locked}30`:`${C.locked}10`}`,transition:"all 0.3s"}}>
+<div style={{fontSize:8,fontWeight:700,color:isActive?C.locked:`${C.locked}66`,letterSpacing:0.5}}>{code}</div>
+<div style={{fontSize:5,color:C.dim,marginTop:1,letterSpacing:1,fontWeight:600}}>{isActive?"● LIVE":"CLASSIFIED"}</div>
+</div>);})}
+</div>
+
+{/* COUNT + HOOK */}
+<div style={{display:"flex",justifyContent:"center",marginTop:10,gap:8}}>
+<div style={{padding:"6px 14px",background:`${C.locked}08`,border:`1px solid ${C.locked}18`,borderRadius:5,display:"flex",alignItems:"center",gap:8}}>
+<div style={{fontSize:18,fontWeight:900,color:C.locked}}>47</div>
+<div style={{textAlign:"left"}}><div style={{fontSize:7,fontWeight:700,letterSpacing:1.5,color:C.locked}}>CLASSIFIED PIPELINES</div>
+<div style={{fontSize:7,color:C.dim}}>Sources span multiple industries</div></div>
+</div>
+<div style={{padding:"6px 14px",background:`${C.gold}08`,border:`1px solid ${C.gold}18`,borderRadius:5,display:"flex",alignItems:"center",gap:8}}>
+<div style={{fontSize:18,fontWeight:900,color:C.gold}}>5</div>
+<div style={{textAlign:"left"}}><div style={{fontSize:7,fontWeight:700,letterSpacing:1.5,color:C.gold}}>PUBLIC SOURCES</div>
+<div style={{fontSize:7,color:C.dim}}>Industry standard baseline</div></div>
+</div>
+</div>
+
+<div style={{textAlign:"center",marginTop:10,padding:"8px 16px",background:`${C.warn}06`,border:`1px solid ${C.warn}12`,borderRadius:5}}>
+<div style={{fontSize:9,color:C.warn,fontWeight:700,fontStyle:"italic"}}>"We look where nobody in maritime has thought to look."</div>
+<div style={{fontSize:8,color:C.dim,marginTop:3}}>Cross-industry data correlation · unconventional environmental proxies · anomaly detection from non-maritime sources</div>
+</div>
+
+{/* INFRA */}
+<div style={{display:"flex",gap:5,justifyContent:"center",paddingTop:12,marginTop:12,borderTop:`1px dashed ${C.gold}15`,flexWrap:"wrap"}}>
+<Chip label="ERA5 / CDS" sub="Foundation" color={C.gold} active={d==="era5"} onClick={()=>setD(d==="era5"?null:"era5")}/>
+<Chip label="Apache Kafka" sub="Streaming" color={C.gold} active={d==="kafka"} onClick={()=>setD(d==="kafka"?null:"kafka")}/>
+<Chip label="Feature Store" sub="Centralised" color={C.gold} active={d==="feast"} onClick={()=>setD(d==="feast"?null:"feast")}/>
+<Chip label="Apache Airflow" sub="Orchestration" color={C.gold} active={d==="airflow"} onClick={()=>setD(d==="airflow"?null:"airflow")}/>
+</div>
+</div>
+
+<Arrow color={C.gold} label="52 PHYSICS-VALIDATED DATA STREAMS"/>
+
+{/* LAYER 2: AI */}
+<LH n="2" title="7 SELF-LEARNING AI SYSTEMS" sub="Consecutive processing chain · adaptive · proprietary to FIG LTD" color={C.locked}/>
+<div style={{background:`linear-gradient(135deg,${C.locked}05,${C.purple}04)`,border:`1.5px solid ${C.locked}25`,borderRadius:12,padding:"22px 16px",position:"relative",overflow:"hidden"}}>
+<div style={{position:"absolute",top:0,left:0,right:0,bottom:0,background:`repeating-linear-gradient(0deg,transparent,transparent 4px,${C.locked}02 4px,${C.locked}02 5px)`,pointerEvents:"none"}}/>
+<div style={{position:"relative",zIndex:1,textAlign:"center"}}>
+<div style={{fontSize:11,fontWeight:800,letterSpacing:2,color:C.locked,marginBottom:14}}>🔒 CLASSIFIED · CONSECUTIVE AI CHAIN</div>
+
+<div style={{display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 14px",flexWrap:"wrap",gap:2}}>
+{[1,2,3,4,5,6,7].map((n,i)=>(
+<div key={n} style={{display:"flex",alignItems:"center"}}>
+<div style={{width:50,height:50,borderRadius:8,background:`${C.locked}08`,border:`1.5px solid ${C.locked}22`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
+<div style={{fontSize:16,fontWeight:900,color:C.locked}}>{n}</div>
+<div style={{fontSize:5,color:C.dim,letterSpacing:1.5,fontWeight:700}}>SYSTEM</div>
+</div>
+{i<6&&<div style={{display:"flex",alignItems:"center",padding:"0 2px"}}>
+<div style={{width:14,height:1,background:`${C.locked}40`}}/>
+<div style={{width:0,height:0,borderTop:"3px solid transparent",borderBottom:"3px solid transparent",borderLeft:`4px solid ${C.locked}40`}}/>
+</div>}
+</div>))}
+</div>
+
+<div style={{display:"inline-flex",alignItems:"center",gap:6,padding:"6px 14px",background:`${C.purple}10`,border:`1px solid ${C.purple}25`,borderRadius:5,marginBottom:12}}>
+<div style={{fontSize:10,color:C.purple}}>⟳</div>
+<div style={{fontSize:9,fontWeight:700,color:C.purple,letterSpacing:1}}>SELF-LEARNING</div>
+<div style={{fontSize:8,color:C.dim}}>— each system adapts and improves with new data</div>
+</div>
+
+<div style={{display:"flex",justifyContent:"center",marginBottom:14}}>
+<div style={{display:"inline-flex",alignItems:"center",gap:10,padding:"10px 20px",background:`${C.ok}08`,border:`1px solid ${C.ok}25`,borderRadius:8}}>
+<div style={{fontSize:26,fontWeight:900,color:C.ok}}>96.4%</div>
+<div style={{textAlign:"left"}}>
+<div style={{fontSize:9,fontWeight:700,color:C.ok,letterSpacing:1}}>VALIDATED ACCURACY</div>
+<div style={{fontSize:8,color:C.dim}}>7-year back-test · 2,885 data points</div>
+</div>
+</div>
+</div>
+
+<div style={{display:"flex",justifyContent:"center",gap:6,flexWrap:"wrap"}}>
+{[{v:"7",l:"AI SYSTEMS"},{v:"Consecutive",l:"PROCESSING"},{v:"Adaptive",l:"WEIGHTING"},{v:"Proprietary",l:"MULTIPLIERS"}].map((s,i)=>(
+<div key={i} style={{padding:"7px 13px",background:`${C.locked}06`,border:`1px dashed ${C.locked}18`,borderRadius:5,textAlign:"center",minWidth:85}}>
+<div style={{fontSize:11,fontWeight:800,color:C.locked}}>{s.v}</div>
+<div style={{fontSize:6,color:C.dim,marginTop:2,letterSpacing:1.5,fontWeight:600}}>{s.l}</div>
+</div>))}
+</div>
+
+<div style={{display:"flex",gap:5,justifyContent:"center",marginTop:14,paddingTop:12,borderTop:`1px dashed ${C.locked}12`}}>
+<Chip label="MLflow" sub="Model registry" color={C.purple} active={d==="mlflow"} onClick={()=>setD(d==="mlflow"?null:"mlflow")}/>
+<Chip label="TimescaleDB" sub="Time-series" color={C.purple} active={d==="timescale"} onClick={()=>setD(d==="timescale"?null:"timescale")}/>
+</div>
+</div>
+</div>
+
+<Arrow color={C.locked} label="RISK PREDICTION"/>
+
+{/* LAYER 3: OUTPUT */}
+<LH n="3" title="EXPLAINABLE OUTPUT" sub="Glass box · legally defensible" color={C.accent}/>
+<div style={{background:`${C.accent}04`,border:`1px solid ${C.accent}15`,borderRadius:10,padding:"14px"}}>
+<div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5,marginBottom:10}}>
+{[{v:"0-100%",l:"RISK SCORE"},{v:"5-TIER",l:"CLASS"},{v:"95% CI",l:"CONFIDENCE"},{v:"GO/STAY",l:"DECISION"}].map(o=>(
+<div key={o.l} style={{padding:"9px 6px",background:`${C.accent}06`,border:`1px solid ${C.accent}12`,borderRadius:5,textAlign:"center"}}>
+<div style={{fontSize:13,fontWeight:800,color:C.accent}}>{o.v}</div>
+<div style={{fontSize:6,color:C.dim,marginTop:2,letterSpacing:1.2,fontWeight:700}}>{o.l}</div>
+</div>))}
+</div>
+<div style={{display:"flex",gap:5,justifyContent:"center",flexWrap:"wrap"}}>
+<Chip label="FastAPI" sub="Async serving" color={C.accent} active={d==="fastapi"} onClick={()=>setD(d==="fastapi"?null:"fastapi")}/>
+<Chip label="Celery + Redis" sub="Task queue" color={C.accent} active={d==="celery"} onClick={()=>setD(d==="celery"?null:"celery")}/>
+<Chip label="SHAP / LIME" sub="Explainability" color={C.accent} active={d==="shap"} onClick={()=>setD(d==="shap"?null:"shap")}/>
+</div>
+</div>
+
+<Arrow color={C.accent} label="PREDICTION + EXPLANATION"/>
+
+{/* LAYER 4: BLOCKCHAIN */}
+<LH n="4" title="DUAL-CHAIN EVIDENCE & OPERATIONS" sub="Ethereum L1 + Polygon L2 · immutable audit" color={C.ok}/>
+<div style={{background:`${C.ok}04`,border:`1px solid ${C.ok}15`,borderRadius:10,padding:"14px"}}>
+<div style={{display:"flex",gap:6,justifyContent:"center",marginBottom:10,flexWrap:"wrap"}}>
+
+<div onClick={()=>setD(d==="eth"?null:"eth")} style={{flex:1,minWidth:180,padding:"12px 16px",background:d==="eth"?`${C.eth}10`:`${C.eth}05`,border:`1px solid ${d==="eth"?`${C.eth}50`:`${C.eth}20`}`,borderRadius:8,cursor:"pointer",transition:"all 0.2s",position:"relative"}}>
+{d==="eth"&&<div style={{position:"absolute",top:0,left:0,right:0,height:2,background:C.eth,borderRadius:"8px 8px 0 0"}}/>}
+<div style={{display:"flex",alignItems:"center",gap:8}}>
+<div style={{width:30,height:30,borderRadius:6,background:`${C.eth}15`,border:`1px solid ${C.eth}30`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15}}>⟠</div>
+<div><div style={{fontSize:11,fontWeight:700,color:C.eth}}>Ethereum L1</div>
+<div style={{fontSize:7,color:C.dim}}>Permanent evidence · maximum security</div></div>
+</div>
+<div style={{fontSize:8,color:C.mid,marginTop:6,lineHeight:1.5}}>Final batch hashes · methodology proof · legal-grade timestamps</div>
+</div>
+
+<div onClick={()=>setD(d==="poly"?null:"poly")} style={{flex:1,minWidth:180,padding:"12px 16px",background:d==="poly"?`${C.poly}10`:`${C.poly}05`,border:`1px solid ${d==="poly"?`${C.poly}50`:`${C.poly}20`}`,borderRadius:8,cursor:"pointer",transition:"all 0.2s",position:"relative"}}>
+{d==="poly"&&<div style={{position:"absolute",top:0,left:0,right:0,height:2,background:C.poly,borderRadius:"8px 8px 0 0"}}/>}
+<div style={{display:"flex",alignItems:"center",gap:8}}>
+<div style={{width:30,height:30,borderRadius:6,background:`${C.poly}15`,border:`1px solid ${C.poly}30`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:800,color:C.poly}}>⬡</div>
+<div><div style={{fontSize:11,fontWeight:700,color:C.poly}}>Polygon L2</div>
+<div style={{fontSize:7,color:C.dim}}>Operational scale · reconstruction logs</div></div>
+</div>
+<div style={{fontSize:8,color:C.mid,marginTop:6,lineHeight:1.5}}>Per-reconstruction timestamps · live prediction logs · high frequency</div>
+</div>
+</div>
+
+<div style={{display:"flex",gap:5,justifyContent:"center",paddingTop:10,borderTop:`1px dashed ${C.ok}15`}}>
+<Chip label="Docker / K8s" sub="Microservices" color={C.ok} active={d==="docker"} onClick={()=>setD(d==="docker"?null:"docker")}/>
+<Chip label="Grafana" sub="Observability" color={C.ok} active={d==="grafana"} onClick={()=>setD(d==="grafana"?null:"grafana")}/>
+</div>
+</div>
+
+</>)}
+
+{/* ════════ SCALING TAB ════════ */}
+{tab==="scale"&&(
+<div style={{display:"flex",flexDirection:"column",gap:10}}>
+<div style={{textAlign:"center",padding:"14px",background:`${C.accent}06`,border:`1px solid ${C.accent}15`,borderRadius:8}}>
+<div style={{fontSize:11,fontWeight:700,color:C.accent,letterSpacing:1}}>SCALING ROADMAP</div>
+<div style={{fontSize:9,color:C.dim,marginTop:4}}>Self-learning systems compound their advantage — every data point makes the moat wider</div>
+</div>
+{[
+{phase:"PHASE 1",title:"VALIDATED",sc:C.ok,status:"COMPLETE",items:[
+{t:"96.4% Accuracy",d:"7-year back-test across 2,885 data points. 7 consecutive AI systems validated."},
+{t:"52 Data Pipelines",d:"Conventional + cross-industry unconventional sources. Multi-domain correlation proven."},
+{t:"Dual Blockchain Evidence",d:"Ethereum L1 + Polygon L2 operational. 12 evidence batches sealed."},
+{t:"Self-Learning Active",d:"Systems continuously adapt. Every new data point widens the competitive moat."},
+]},
+{phase:"PHASE 2",title:"MULTI-HARBOUR",sc:C.gold,status:"NEXT",items:[
+{t:"Microservice Decomposition",d:"Each of 7 AI systems becomes an independent container. Scale bottleneck systems without touching others."},
+{t:"Feature Store Centralisation",d:"52 pipelines feeding a single source of truth. Training/serving consistency guaranteed."},
+{t:"Kafka Event Streaming",d:"Replace batch pulls with real-time streams. One data update → every harbour's prediction refreshes."},
+]},
+{phase:"PHASE 3",title:"REGIONAL SCALE",sc:C.purple,status:"PLANNED",items:[
+{t:"Kubernetes Multi-Cluster",d:"Regional clusters: UK, North Sea, Atlantic. Predictions served from nearest region."},
+{t:"Inference DAG Optimisation",d:"Parallelise AI systems where dependencies allow. Reduce 7-step sequential latency."},
+{t:"Polygon Batch Anchoring",d:"L2 timestamps batched and anchored to L1 periodically. Fraction-of-a-cent per prediction."},
+]},
+{phase:"PHASE 4",title:"GLOBAL / 100K+",sc:C.warn,status:"ARCHITECTURE READY",items:[
+{t:"Edge Computing at Harbours",d:"Lightweight nodes deployed directly at ports. Core pipeline central, edge serves locally-augmented predictions."},
+{t:"Digital Twin per Vessel",d:"Continuous risk model per vessel: AIS track, loading state, crew fatigue. Persistent state, not per-query."},
+{t:"Multi-Sector Plugin Model",d:"Same 7-system chain, different feature weights: offshore wind, aquaculture, recreational, commercial shipping."},
+{t:"API Marketplace",d:"Insurers, regulators, fleet operators consume via tiered API. Blockchain evidence = commercial trust layer."},
+]},
+].map(p=>(
+<div key={p.phase} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:8,padding:"14px"}}>
+<div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+<div><span style={{fontSize:9,fontWeight:800,color:C.accent,letterSpacing:1.5}}>{p.phase}</span>
+<span style={{fontSize:11,fontWeight:700,color:C.text,marginLeft:10}}>{p.title}</span></div>
+<div style={{fontSize:7,fontWeight:700,color:p.sc,padding:"3px 10px",background:`${p.sc}12`,border:`1px solid ${p.sc}25`,borderRadius:3,letterSpacing:1}}>{p.status}</div>
+</div>
+{p.items.map((item,i)=>(
+<div key={i} style={{display:"flex",gap:10,padding:"7px 10px",background:`${C.bg}80`,borderRadius:4,border:`1px solid ${C.border}`,marginBottom:i<p.items.length-1?4:0}}>
+<div style={{width:3,borderRadius:2,background:p.sc,flexShrink:0,opacity:0.5}}/>
+<div><div style={{fontSize:10,fontWeight:700,color:C.text}}>{item.t}</div>
+<div style={{fontSize:9,color:C.mid,marginTop:2,lineHeight:1.5}}>{item.d}</div></div>
+</div>))}
+</div>))}
+</div>)}
+
+{/* ════════ WHY TAB ════════ */}
+{tab==="why"&&(
+<div style={{display:"flex",flexDirection:"column",gap:8}}>
+<div style={{textAlign:"center",padding:"14px",background:`${C.warn}06`,border:`1px solid ${C.warn}15`,borderRadius:8}}>
+<div style={{fontSize:11,fontWeight:700,color:C.warn,letterSpacing:1}}>EVERY CHOICE HAS A REASON</div>
+</div>
+{[
+{q:"Why 52 data sources across multiple industries?",a:"Standard maritime forecasting uses the same public data everyone has access to. Our edge comes from cross-correlating sources that nobody in maritime has thought to use. We identified that dangerous conditions leave signatures in data from completely unrelated industries. Those correlations are invisible if you only look where everyone else looks.",c:C.gold},
+{q:"Why self-learning systems?",a:"Static models degrade as conditions change. Our 7 AI systems continuously adapt — every new data point refines their understanding. This creates a compounding advantage: the longer we operate, the smarter the systems get, the wider the moat becomes. A competitor starting today is 7 years of training data behind us.",c:C.locked},
+{q:"Why 7 consecutive systems, not one model?",a:"No single model captures all failure modes. Each system specialises, and its output becomes the input for the next. The consecutive architecture means each system can be independently audited, versioned, and improved. A monolithic model is a black box with no seams. A 7-system chain has 7 inspection points.",c:C.locked},
+{q:"Why dual blockchain (Ethereum + Polygon)?",a:"Different evidence needs different guarantees. Ethereum L1: permanent, maximum security, for legal-grade evidence that must survive decades. Polygon L2: same cryptography, ~1000× cheaper, for high-frequency operational timestamps. Using only L1 is prohibitively expensive at scale. Using only L2 lacks the permanence courts require.",c:C.eth},
+{q:"Why explainability on a 7-system pipeline?",a:"'The AI said it was dangerous' is inadmissible. A full decomposition of which data sources, through which systems, drove the prediction — that's evidence a coroner can act on. Explainability isn't a feature. It's the difference between a prediction engine and a system that changes regulation.",c:C.accent},
+{q:"Why does the data moat compound?",a:"Every day we operate: 52 pipelines generate new correlations, 7 AI systems learn from them, accuracy improves. A competitor would need to: identify our unconventional sources, build the pipelines, collect years of data, calibrate the cross-correlations. By the time they've done that, our self-learning systems are years further ahead.",c:C.warn},
+].map((item,i)=>(
+<div key={i} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:8,padding:"14px 16px"}}>
+<div style={{fontSize:11,fontWeight:700,color:item.c,marginBottom:6}}>{item.q}</div>
+<div style={{fontSize:10,color:C.mid,lineHeight:1.7}}>{item.a}</div>
+</div>))}
+</div>)}
+
+{/* DETAIL PANEL */}
+{d&&info[d]&&(
+<div style={{marginTop:14,background:C.card,border:`1px solid ${info[d].c}30`,borderRadius:8,padding:"14px 18px",position:"relative"}}>
+<div style={{position:"absolute",top:0,left:0,right:0,height:2,background:`linear-gradient(90deg,transparent,${info[d].c},transparent)`,borderRadius:"8px 8px 0 0"}}/>
+<div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+<span style={{fontSize:11,fontWeight:800,color:info[d].c,letterSpacing:1}}>{info[d].t}</span>
+<span style={{fontSize:8,color:C.dim,letterSpacing:1}}>WHY THIS CHOICE</span>
+</div>
+<p style={{fontSize:10,color:C.mid,lineHeight:1.7,margin:0}}>{info[d].x}</p>
+</div>)}
+
+{/* STATS */}
+<div style={{marginTop:24,display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:5}}>
+{[
+{v:"96.4%",l:"ACCURACY",s:"7yr validated",c:C.ok},
+{v:"52",l:"PIPELINES",s:"Multi-industry",c:C.gold},
+{v:"7",l:"AI SYSTEMS",s:"Self-learning",c:C.locked},
+{v:"2",l:"BLOCKCHAINS",s:"ETH + Polygon",c:C.eth},
+{v:"2,885",l:"DATA POINTS",s:"Back-tested",c:C.accent},
+].map((s,i)=>(
+<div key={i} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:5,padding:"10px 6px",textAlign:"center"}}>
+<div style={{fontSize:18,fontWeight:900,color:s.c}}>{s.v}</div>
+<div style={{fontSize:7,fontWeight:700,letterSpacing:1.5,color:C.text,marginTop:3}}>{s.l}</div>
+<div style={{fontSize:6,color:C.dim,marginTop:1}}>{s.s}</div>
+</div>))}
+</div>
+
+<div style={{marginTop:20,textAlign:"center",padding:"10px 0",borderTop:`1px solid ${C.border}`}}>
+<div style={{fontSize:8,color:C.dim,letterSpacing:1.5}}>© 2025 FIG LTD · ENIGMA CORE v7.0-ELITE · PROPRIETARY AND CONFIDENTIAL</div>
+</div>
+
+</div>
+</div>);
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
